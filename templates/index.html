@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Web Máy Tính</title>
+</head>
+<body>
+    <h1>Web Máy Tính Đơn Giản</h1>
+
+    <form method="post">
+        <input type="number" step="any" name="a" required>
+        <select name="op">
+            <option value="add">+</option>
+            <option value="sub">-</option>
+            <option value="mul">*</option>
+            <option value="div">/</option>
+        </select>
+        <input type="number" step="any" name="b" required>
+        <button type="submit">Tính</button>
+    </form>
+
+    {% if result is not none %}
+        <h2>Kết quả: {{ result }}</h2>
+    {% endif %}
+
+    {% if error %}
+        <p style="color:red">{{ error }}</p>
+    {% endif %}
+</body>
+</html>
