@@ -6,4 +6,4 @@ def home():
     return render_template("index.html", message="Hello CI/CD Demo!")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=3000)
+    app.run(host="0.0.0.0", port=5000)
