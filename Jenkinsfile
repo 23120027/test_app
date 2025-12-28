@@ -35,7 +35,7 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh 'docker push stardust18364/calculator-web:latest'
+                    sh 'docker pull stardust18364/calculator-web:latest'
                 }
             }
         }
