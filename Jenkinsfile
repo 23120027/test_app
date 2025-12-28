@@ -16,7 +16,7 @@ pipeline {
         stage('Push Image to Docker Hub') {
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    withCredentials([usernamePassword(credentialsId: 'docker_hub-cred', 
+                    withCredentials([usernamePassword(credentialsId: 'docker_hub-ssh', 
                                                      usernameVariable: 'DOCKER_USER', 
                                                      passwordVariable: 'DOCKER_PASS')]) {
                         sh """
@@ -32,7 +32,7 @@ pipeline {
             steps {
                 sh 'docker rm -f stardust18364/calculator-web:latest'
                 withCredentials([usernamePassword(
-                    credentialsId: 'docker_hub-cred',
+                    credentialsId: 'docker_hub-ssh',
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
