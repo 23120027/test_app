@@ -19,10 +19,8 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'docker_hub-ssh', 
                                                      usernameVariable: 'DOCKER_USER', 
                                                      passwordVariable: 'DOCKER_PASS')]) {
-                        sh """
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin $DOCKER_REGISTRY
-                        docker push ${DOCKER_IMAGE}
-                        """
+                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                        sh 'docker push stardust18364/calculator-web:latest'
                     }
                 }
             }
