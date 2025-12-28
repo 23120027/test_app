@@ -1,18 +1,7 @@
 pipeline {
     agent any
 
-    environment {
-        GIT_SSH_COMMAND = 'ssh -o StrictHostKeyChecking=no'
-    }
-
     stages {
-        stage('Clone') {
-            steps {
-                git credentialsId: 'github-ssh',
-                    url: 'git@github.com:23120027/calculator-web.git'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t stardust18364/calculator-web:latest .'
