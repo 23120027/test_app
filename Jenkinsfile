@@ -1,53 +1,61 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE = "stardust18364/calculator-web"
+        PORT = "8080"
+    }
+
+    triggers {
+        githubPush() 
+    }
+
     stages {
-        stage('Build image') {
-            environment {
-                DOCKER_HOST = "tcp://docker:2376"
-                DOCKER_CERT_PATH = "/certs/client"
-                DOCKER_TLS_VERIFY = "1"
-            }
-            steps {
-                sh 'docker build --no-cache -t stardust18364/calculator-web:latest .'
-            }
+        stage('Checkout') {
+            sshagent(['github-ssh']) {  
+                    sh 'git clone -b main git@github.com:23120027/repo.git'
+                }
         }
 
-        stage('Push Image to Docker Hub') {
+        stage('Build Docker Image') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    withCredentials([usernamePassword(credentialsId: 'docker_hub-ssh', 
-                                                     usernameVariable: 'DOCKER_USER', 
-                                                     passwordVariable: 'DOCKER_PASS')]) {
-                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                        sh 'docker push stardust18364/calculator-web:latest'
-                    }
+                script {
+                    COMMIT_HASH = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+                    IMAGE_TAG = "${IMAGE}:${COMMIT_HASH}"
+                    sh "docker build -t ${IMAGE_TAG} ."
                 }
             }
         }
 
-        stage('Pull image from Docker hub'){
+        stage('Push Docker Image') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'docker_hub-ssh',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh 'docker pull stardust18364/calculator-web:latest'
+                withCredentials([usernamePassword(credentialsId: 'docker_hub-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh """
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        docker push ${IMAGE_TAG}
+                    """
                 }
             }
         }
 
-        stage('Run container') {
-            environment {
-                DOCKER_HOST = "unix:///var/run/docker.sock"
-            }
+        stage('Deploy') {
             steps {
-                sh 'docker stop calculator-web || true'
-                sh 'docker rm calculator-web || true'
-                sh 'docker run -d -p 5000:5000 --name calculator-web stardust18364/calculator-web:latest'
+                sh """
+                docker stop calculator-web || true
+                docker rm calculator-web || true
+                docker pull ${IMAGE_TAG}
+                docker run -d --name calculator-web -p ${PORT}:${PORT} ${IMAGE_TAG}
+                """
             }
+        }
+    }
+
+    post {
+        success {
+            echo " Deployment successful for commit ${COMMIT_HASH}"
+        }
+        failure {
+            echo " Deployment failed!"
         }
     }
 }
