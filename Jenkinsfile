@@ -13,7 +13,9 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'master', url: 'git@github.com:23120027/test-app.git'
+                sshagent(['github-ssh']) { 
+                    git branch: 'master', url: 'git@github.com:23120027/test-app.git'
+                }
             }
         }
 
@@ -59,10 +61,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Deployment successful for commit ${COMMIT_HASH}"
+            echo "Deployment successful for commit ${COMMIT_HASH}"
         }
         failure {
-            echo "❌ Deployment failed!"
+            echo "Deployment failed!"
         }
     }
 }
