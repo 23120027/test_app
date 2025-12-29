@@ -12,6 +12,11 @@ pipeline {
 
     stages {
         stage('Build Docker Image') {
+            environment {
+                DOCKER_HOST = "tcp://docker:2376"
+                DOCKER_CERT_PATH = "/certs/client"
+                DOCKER_TLS_VERIFY = "1"
+            }
             steps {
                 script {
                     COMMIT_HASH = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
@@ -35,6 +40,9 @@ pipeline {
         }
 
         stage('Deploy Container') {
+            environment {
+                DOCKER_HOST = "unix:///var/run/docker.sock"
+            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker_hub-ssh',
                                                  usernameVariable: 'DOCKER_USER',
