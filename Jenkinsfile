@@ -5,62 +5,66 @@ pipeline {
         githubPush()
     }
 
+    environment {
+        IMAGE = "stardust18364/calculator-web"
+        PORT = "5000"
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'master', url: 'git@github.com:23120027/test_app.git'
-            }
-        }
-
-        stage('Build image') {
-            environment {
-                DOCKER_HOST = "tcp://docker:2376"
-                DOCKER_CERT_PATH = "/certs/client"
-                DOCKER_TLS_VERIFY = "1"
-            }
-            steps {
-                sh 'docker build --no-cache -t stardust18364/calculator-web:latest .'
-            }
-        }
-
-        stage('Push Image to Docker Hub') {
-            steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    withCredentials([usernamePassword(credentialsId: 'docker_hub-ssh', 
-                                                     usernameVariable: 'DOCKER_USER', 
-                                                     passwordVariable: 'DOCKER_PASS')]) {
-                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                        sh 'docker push stardust18364/calculator-web:latest'
-                    }
+                sshagent(['github-ssh']) { 
+                    git branch: 'master', url: 'git@github.com:23120027/test-app.git'
                 }
             }
         }
 
-        stage('Pull image from Docker hub'){
+        stage('Build Docker Image') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'docker_hub-ssh',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh 'docker stop calculator-web || true'
-                    sh 'docker rm calculator-web || true'
-                    sh 'docker rmi stardust18364/calculator-web:latest'
-                    sh 'docker pull stardust18364/calculator-web:latest'
+                script {
+                    COMMIT_HASH = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+                    IMAGE_TAG = "${IMAGE}:${COMMIT_HASH}"
+                    sh "docker build --no-cache -t ${IMAGE_TAG} ."
                 }
             }
         }
 
-        stage('Run container') {
-            environment {
-                DOCKER_HOST = "unix:///var/run/docker.sock"
-            }
+        stage('Push Docker Image') {
             steps {
-                sh 'docker stop calculator-web || true'
-                sh 'docker rm calculator-web || true'
-                sh 'docker run -d -p 5000:5000 --name calculator-web stardust18364/calculator-web:latest'
+                withCredentials([usernamePassword(credentialsId: 'docker_hub-ssh', 
+                                                 usernameVariable: 'DOCKER_USER', 
+                                                 passwordVariable: 'DOCKER_PASS')]) {
+                    sh """
+                        echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
+                        docker push ${IMAGE_TAG}
+                    """
+                }
             }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker_hub-ssh',
+                                                 usernameVariable: 'DOCKER_USER',
+                                                 passwordVariable: 'DOCKER_PASS')]) {
+                    sh """
+                        echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
+                        docker stop calculator-web || true
+                        docker rm calculator-web || true
+                        docker pull ${IMAGE_TAG}
+                        docker run -d -p ${PORT}:${PORT} --name calculator-web ${IMAGE_TAG}
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployment successful for commit ${COMMIT_HASH}"
+        }
+        failure {
+            echo "❌ Deployment failed!"
         }
     }
 }
