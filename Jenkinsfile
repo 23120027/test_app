@@ -9,7 +9,7 @@ pipeline {
                 DOCKER_TLS_VERIFY = "1"
             }
             steps {
-                sh 'docker build -t stardust18364/calculator-web:latest .'
+                sh 'docker build --no-cache -t stardust18364/calculator-web:latest .'
             }
         }
 
