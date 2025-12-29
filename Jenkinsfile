@@ -11,18 +11,6 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
-            options {
-                timeout(time: 5, unit: 'MINUTES')
-            }
-            steps {
-                deleteDir()
-                sshagent(['github-ssh']) { 
-                    git branch: 'master', url: 'git@github.com:23120027/test-app.git'           
-                }
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 script {
