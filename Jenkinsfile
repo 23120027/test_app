@@ -12,9 +12,11 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            sshagent(['github-ssh']) {  
-                    sh 'git clone -b main git@github.com:23120027/repo.git'
-                }
+            steps{
+                sshagent(['github-ssh']) {  
+                        sh 'git clone -b main git@github.com:23120027/repo.git'
+                    }
+            }
         }
 
         stage('Build Docker Image') {
