@@ -9,6 +9,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'master', url: 'git@github.com:23120027/test_app.git'
+            }
         }
 
         stage('Build image') {
