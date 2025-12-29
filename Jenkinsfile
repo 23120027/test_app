@@ -6,6 +6,12 @@ pipeline {
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'master', url: 'https://github.com/23120027/test-app.git'
+            }
+        }
+
         stage('Build image') {
             environment {
                 DOCKER_HOST = "tcp://docker:2376"
@@ -38,6 +44,7 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh 'docker rmi stardust18364/calculator-web:latest'
                     sh 'docker pull stardust18364/calculator-web:latest'
                 }
             }
