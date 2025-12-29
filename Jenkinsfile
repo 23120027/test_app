@@ -14,7 +14,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 sshagent(['github-ssh']) { 
-                    git branch: 'master', url: 'git@github.com:23120027/test-app.git'
+                    git branch: 'master', url: 'git@github.com:23120027/test-app.git', timeout: 60 
                 }
             }
         }
