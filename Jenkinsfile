@@ -44,6 +44,8 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh 'docker stop calculator-web || true'
+                    sh 'docker rm calculator-web || true'
                     sh 'docker rmi stardust18364/calculator-web:latest'
                     sh 'docker pull stardust18364/calculator-web:latest'
                 }
@@ -55,8 +57,6 @@ pipeline {
                 DOCKER_HOST = "unix:///var/run/docker.sock"
             }
             steps {
-                sh 'docker stop calculator-web || true'
-                sh 'docker rm calculator-web || true'
                 sh 'docker run -d -p 5000:5000 --name calculator-web stardust18364/calculator-web:latest'
             }
         }
