@@ -45,6 +45,7 @@ pipeline {
                         docker rm calculator-web || true
                         docker pull ${IMAGE_TAG}
                         docker run -d -p ${PORT}:${PORT} --name calculator-web ${IMAGE_TAG}
+                        docker ps -a
                     """
                 }
             }
