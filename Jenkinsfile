@@ -14,7 +14,7 @@ pipeline {
         stage('Checkout') {
             steps{
                 sshagent(['github-ssh']) {  
-                        git branch: 'main', url: 'git@github.com:23120027/test-app.git', changelog: true, poll: true, timeout: 60
+                        sh 'git clone -b main git@github.com:23120027/test-app.git'
                     }
             }
         }
